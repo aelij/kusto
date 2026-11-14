@@ -1,0 +1,1 @@
+range i from 1 to 100000 step 1 | project i, x = i * 1.5, s = tostring(i), t = datetime(2020-01-01) + i * 1s

@@ -1,0 +1,14 @@
+<Project>
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageVersion Include="AwesomeAssertions" Version="9.6.0" />
+    <PackageVersion Include="Azure.Core" Version="1.65.0" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.16.0-preview.2" />
+    <PackageVersion Include="Microsoft.Azure.Kusto.Data" Version="14.2.4" />
+    <PackageVersion Include="Microsoft.Extensions.Azure" Version="1.14.1" />
+    <PackageVersion Include="System.Text.Json" Version="11.0.0" />
+  </ItemGroup>
+</Project>

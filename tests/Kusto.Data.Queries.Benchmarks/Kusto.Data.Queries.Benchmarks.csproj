@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="Microsoft.Azure.Kusto.Data" />
+    <ProjectReference Include="..\..\src\Kusto.Data.Queries\Kusto.Data.Queries.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\data\StormEvents.10000.json" Link="testdata\StormEvents.10000.json" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\data\Numbers.100000.json" Link="testdata\Numbers.100000.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

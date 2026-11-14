@@ -1,0 +1,9 @@
+datatable(b:bool, dt:datetime, dyn:dynamic, g:guid, i:int, l:long, r:real, s:string, ts:timespan, dec:decimal)
+[
+  true, datetime(2020-01-02 03:04:05.1234567), dynamic({"a":[1,2,{"b":null}],"s":"x\"y"}), guid(74be27de-1e4e-49d9-b579-fe0b331d3642), 42, 9223372036854775807, 1.5, "hello \"world\" é ☃", time(1.02:03:04.567), decimal(1.2345678901234567890123456789),
+  false, datetime(null), dynamic(null), guid(null), int(null), long(null), real(null), "", time(null), decimal(null),
+  bool(null), datetime(0001-01-01), dynamic([1,"two",3.5,true,null]), guid(00000000-0000-0000-0000-000000000000), -2147483648, -9223372036854775808, real(nan), "multi\nline\ttab", time(-00:00:01), decimal(-0.5),
+  true, datetime(9999-12-31 23:59:59.9999999), dynamic("just a string"), guid(74be27de-1e4e-49d9-b579-fe0b331d3642), 0, 0, real(+inf), "x", time(10675199.02:48:05.4775807), decimal(79228162514264337593543950335),
+  true, datetime(2020-01-02), dynamic(123), guid(74be27de-1e4e-49d9-b579-fe0b331d3642), 1, 1, real(-inf), "y", time(0), decimal(0),
+  true, datetime(2020-01-02 03:04:05), dynamic(1.5), guid(74be27de-1e4e-49d9-b579-fe0b331d3642), 1, 1, 1e300, "z", 1tick, decimal(0.0000000001)
+]

@@ -1,0 +1,1 @@
+StormEvents | order by StartTime asc, EventId asc | take 100

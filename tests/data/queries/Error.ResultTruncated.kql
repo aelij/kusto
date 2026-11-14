@@ -1,0 +1,1 @@
+set truncationmaxrecords=10; StormEvents | take 100

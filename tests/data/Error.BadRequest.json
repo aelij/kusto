@@ -1,0 +1,46 @@
+{
+    "error": {
+        "code": "General_BadRequest",
+        "message": "Request is invalid and cannot be executed.",
+        "@type": "Kusto.Data.Exceptions.KustoBadRequestException",
+        "@message": "Request is invalid and cannot be processed: Syntax error: SYN0002: Missing expression [line:position=1:31]",
+        "@failureCode": 400,
+        "@context": {
+            "timestamp": "2026-11-14T11:10:49.3600676Z",
+            "serviceAlias": "HELP",
+            "clientRequestId": "unspecified;f5e494ca-ee09-493f-8fe6-728430520da2",
+            "activityId": "ecc2c078-7ac0-47aa-8d5d-fb05f15dc9b9",
+            "subActivityId": "b2f9b442-2e18-4b40-a026-54c479568e9d",
+            "activityType": "DN.FE.ExecuteQuery",
+            "parentActivityId": "674fd80f-6545-4d56-932e-3cbcd79bdc59",
+            "activityStack": "(Activity stack: CRID=unspecified;f5e494ca-ee09-493f-8fe6-728430520da2 ARID=ecc2c078-7ac0-47aa-8d5d-fb05f15dc9b9 > KD.Query.Client.ExecuteQueryAsKustoDataStream/5c23fadf-98a3-4e6d-8c86-839ad2691558 > KD.Query.Client.ExecuteQueryAsKustoDataStream/5c23fadf-98a3-4e6d-8c86-839ad2691558 > P.Grpc.Service.ExecuteQueryAsKustoDataStream2/674fd80f-6545-4d56-932e-3cbcd79bdc59 > DN.FE.ExecuteQuery/b2f9b442-2e18-4b40-a026-54c479568e9d)",
+            "serviceFarm": null
+        },
+        "@permanent": true,
+        "@database": "Samples",
+        "innererror": {
+            "code": "SYN0002",
+            "message": "Missing expression",
+            "@type": "Kusto.Data.Exceptions.SyntaxException",
+            "@message": "Syntax error: SYN0002: Missing expression [line:position=1:31]",
+            "@failureCode": 400,
+            "@context": {
+                "timestamp": "2026-11-14T11:10:49.3593618Z",
+                "serviceAlias": "HELP",
+                "clientRequestId": "unspecified;f5e494ca-ee09-493f-8fe6-728430520da2",
+                "activityId": "ecc2c078-7ac0-47aa-8d5d-fb05f15dc9b9",
+                "subActivityId": "b2f9b442-2e18-4b40-a026-54c479568e9d",
+                "activityType": "DN.FE.ExecuteQuery",
+                "parentActivityId": "674fd80f-6545-4d56-932e-3cbcd79bdc59",
+                "activityStack": "(Activity stack: CRID=unspecified;f5e494ca-ee09-493f-8fe6-728430520da2 ARID=ecc2c078-7ac0-47aa-8d5d-fb05f15dc9b9 > KD.Query.Client.ExecuteQueryAsKustoDataStream/5c23fadf-98a3-4e6d-8c86-839ad2691558 > KD.Query.Client.ExecuteQueryAsKustoDataStream/5c23fadf-98a3-4e6d-8c86-839ad2691558 > P.Grpc.Service.ExecuteQueryAsKustoDataStream2/674fd80f-6545-4d56-932e-3cbcd79bdc59 > DN.FE.ExecuteQuery/b2f9b442-2e18-4b40-a026-54c479568e9d)",
+                "serviceFarm": null
+            },
+            "@permanent": true,
+            "@line": "1",
+            "@pos": "31",
+            "@errorCode": "SYN0002",
+            "@errorMessage": "Missing expression",
+            "@token": ""
+        }
+    }
+}

@@ -1,0 +1,1 @@
+set maxmemoryconsumptionperiterator=1048576; StormEvents | summarize make_list(EpisodeNarrative) by State

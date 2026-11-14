@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Kusto.Data.Queries/Kusto.Data.Queries.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Kusto.Data.Queries.Tests/Kusto.Data.Queries.Tests.csproj" />
+    <Project Path="tests/Kusto.Data.Queries.Benchmarks/Kusto.Data.Queries.Benchmarks.csproj" />
+  </Folder>
+</Solution>

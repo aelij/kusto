@@ -1,0 +1,19 @@
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" />
+    <PackageReference Include="Microsoft.Extensions.Azure" />
+    <ProjectReference Include="../../src/Kusto.Data.Queries/Kusto.Data.Queries.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="../data/*.json" Link="testdata/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
