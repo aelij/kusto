@@ -93,6 +93,7 @@ public class KustoTableReaderConcurrencyTests
         ShouldThrowSynchronously(tables.DisposeAsync);
         ((Action)(() => previous.UseData(static (_, _) => 0, 0))).Should().ThrowExactly<InvalidOperationException>();
         ((Action)(() => previous.ToValues())).Should().ThrowExactly<InvalidOperationException>();
+        ((Action)(() => previous.ToValues(new object?[8]))).Should().ThrowExactly<InvalidOperationException>();
         ((Action)(() => previous.ToDocument())).Should().ThrowExactly<InvalidOperationException>();
         ShouldNotBePositioned(rows);
 
@@ -160,13 +161,14 @@ public class KustoTableReaderConcurrencyTests
                 errors.Add(Catch(() => row.UseData(static (_, _) => 0, 0)));
                 errors.Add(Catch(() => rows.Current.UseData(static (_, _) => { }, 0)));
                 errors.Add(Catch(() => row.ToValues()));
+                errors.Add(Catch(() => row.ToValues(new object?[8])));
                 errors.Add(Catch(() => row.ToDocument()));
                 return Encoding.UTF8.GetString(data);
             },
             0);
 
         seen.Should().Be("[\"a\"]");
-        errors.Should().HaveCount(7).And.AllSatisfy(e => e.Should().BeOfType<InvalidOperationException>());
+        errors.Should().HaveCount(8).And.AllSatisfy(e => e.Should().BeOfType<InvalidOperationException>());
         Text(row).Should().Be("[\"a\"]");
         row.ToValues().Should().Equal("a");
         (await RestAsync(tables, rows)).Should().Equal(TwoTablesEvents[2..]);

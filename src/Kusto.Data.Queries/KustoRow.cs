@@ -25,7 +25,7 @@ public readonly struct KustoRow
     /// <summary>Invokes <paramref name="action"/> with the row's UTF-8 JSON array; the span must not be used after it returns.</summary>
     /// <remarks>
     /// The array is well-formed JSON, but its strings are not validated: they may hold invalid UTF-8 or escape lone
-    /// surrogates. <see cref="ToValues"/> rejects such strings with a <see cref="JsonException"/>.
+    /// surrogates. <see cref="ToValues()"/> rejects such strings with a <see cref="JsonException"/>.
     /// </remarks>
     public void UseData<TState>(ReadOnlySpanAction<byte, TState> action, TState state)
     {
@@ -36,7 +36,7 @@ public readonly struct KustoRow
     /// <summary>Invokes <paramref name="func"/> with the row's UTF-8 JSON array; the span must not be used after it returns.</summary>
     /// <remarks>
     /// The array is well-formed JSON, but its strings are not validated: they may hold invalid UTF-8 or escape lone
-    /// surrogates. <see cref="ToValues"/> rejects such strings with a <see cref="JsonException"/>.
+    /// surrogates. <see cref="ToValues()"/> rejects such strings with a <see cref="JsonException"/>.
     /// </remarks>
     public TResult UseData<TState, TResult>(Func<ReadOnlySpan<byte>, TState, TResult> func, TState state)
     {
@@ -55,6 +55,29 @@ public readonly struct KustoRow
 
     /// <summary>Converts the row's values to .NET objects according to the table's column types.</summary>
     public object?[] ToValues() => UseData(static (data, table) => KustoRowValues.ToValues(data, table.ColumnSpan), Table);
+
+    /// <summary>
+    /// Converts the row's values like <see cref="ToValues()"/>, writing them to the first <see cref="KustoTable.Columns"/>
+    /// elements of <paramref name="destination"/> and leaving the rest unchanged.
+    /// </summary>
+    /// <remarks>
+    /// Reusing one destination for every row avoids allocating an array per row; values of value types are still boxed.
+    /// If a value cannot be converted, the destination may be partly written.
+    /// </remarks>
+    /// <exception cref="ArgumentException"><paramref name="destination"/> is shorter than the table's columns.</exception>
+    public void ToValues(Span<object?> destination)
+    {
+        KustoTable table = Table;
+        ReadOnlySpan<byte> data = table.Reader.EnterRow(_version);
+        try
+        {
+            KustoRowValues.ToValues(data, table.ColumnSpan, destination);
+        }
+        finally
+        {
+            table.Reader.Exit();
+        }
+    }
 
     /// <summary>
     /// Converts the value of the column at <paramref name="columnIndex"/> to <typeparamref name="T"/>, which must be

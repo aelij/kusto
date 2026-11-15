@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using AwesomeAssertions;
@@ -37,12 +39,12 @@ public class KustoRowValuesTests
         var dyn = values[2].Should().BeOfType<JsonElement>().Subject;
         dyn.GetProperty("a")[2].GetProperty("b").ValueKind.Should().Be(JsonValueKind.Null);
         dyn.GetProperty("s").GetString().Should().Be("x\"y");
-        values[3].Should().BeOfType<System.Guid>().Which.Should().Be(new System.Guid("74be27de-1e4e-49d9-b579-fe0b331d3642"));
+        values[3].Should().BeOfType<Guid>().Which.Should().Be(new Guid("74be27de-1e4e-49d9-b579-fe0b331d3642"));
         values[4].Should().BeOfType<int>().Which.Should().Be(42);
         values[5].Should().BeOfType<long>().Which.Should().Be(long.MaxValue);
         values[6].Should().BeOfType<double>().Which.Should().Be(1.5);
         values[7].Should().BeOfType<string>().Which.Should().Be("hello \"world\" \u00e9 \u2603");
-        values[8].Should().BeOfType<System.TimeSpan>().Which.Should().Be(new System.TimeSpan(1, 2, 3, 4, 567));
+        values[8].Should().BeOfType<TimeSpan>().Which.Should().Be(new TimeSpan(1, 2, 3, 4, 567));
         values[9].Should().BeOfType<decimal>().Which.Should().Be(1.2345678901234567890123456789m);
     }
 
@@ -129,8 +131,8 @@ public class KustoRowValuesTests
         ParseOne("\"2020-01-02T03:04:05\\u005A\"", KDateTime)
             .Should().Be(new DateTime(2020, 1, 2, 3, 4, 5, DateTimeKind.Utc));
         ParseOne("\"74be27de-1e4e-49d9-b579-fe0b331d3642\"".Replace("74be", "\\u0037\\u0034be"), KGuid)
-            .Should().Be(new System.Guid("74be27de-1e4e-49d9-b579-fe0b331d3642"));
-        ParseOne("\"1.02:03:04.5670000\"".Replace("1.02", "\\u0031.0\\u0032"), KTimeSpan).Should().Be(new System.TimeSpan(1, 2, 3, 4, 567));
+            .Should().Be(new Guid("74be27de-1e4e-49d9-b579-fe0b331d3642"));
+        ParseOne("\"1.02:03:04.5670000\"".Replace("1.02", "\\u0031.0\\u0032"), KTimeSpan).Should().Be(new TimeSpan(1, 2, 3, 4, 567));
         ParseOne("\"\\u002D0.5\"", KDecimal).Should().Be(-0.5m);
         ParseOne("\"\\u002DInfinity\"", KReal).Should().Be(double.NegativeInfinity);
         ParseOne("\"\\u004EaN\"", KReal).Should().Be(double.NaN);
@@ -277,7 +279,7 @@ public class KustoRowValuesTests
         ((Action)(() => ReadStruct<decimal>(value, KDecimal))).Should().ThrowExactly<JsonException>().WithMessage("*c0*");
         ((Action)(() => ReadStruct<DateTime>(value, KDateTime))).Should().ThrowExactly<JsonException>().WithMessage("*c0*");
         ((Action)(() => ReadStruct<TimeSpan>(value, KTimeSpan))).Should().ThrowExactly<JsonException>().WithMessage("*c0*");
-        ((Action)(() => ReadStruct<System.Guid>(value, KGuid))).Should().ThrowExactly<JsonException>().WithMessage("*c0*");
+        ((Action)(() => ReadStruct<Guid>(value, KGuid))).Should().ThrowExactly<JsonException>().WithMessage("*c0*");
     }
 
     [TestMethod]
@@ -290,6 +292,50 @@ public class KustoRowValuesTests
         ReadStruct<long>("5"u8.ToArray(), KLong).Should().Be(5L);
         ReadStruct<int>("null"u8.ToArray(), KLong).Should().BeNull();
         ReadClass<string>("null"u8.ToArray(), KLong).Should().BeNull();
+    }
+
+    [TestMethod]
+    public void TypedRead_OfAValueType_DoesNotBox()
+    {
+        if (typeof(KustoRowValues).Assembly.GetCustomAttribute<DebuggableAttribute>()?.IsJITOptimizerDisabled == true)
+        {
+            Assert.Inconclusive("The JIT only removes the box from an optimized (Release) build of the library.");
+        }
+
+        AllocatedByTypedReads<bool>("true", KBool).Should().Be(0, "bool");
+        AllocatedByTypedReads<int>("1", KInt).Should().Be(0, "int");
+        AllocatedByTypedReads<long>("2", KLong).Should().Be(0, "long");
+        AllocatedByTypedReads<double>("2.5", KReal).Should().Be(0, "real");
+        AllocatedByTypedReads<double>("\"NaN\"", KReal).Should().Be(0, "non-finite real");
+        AllocatedByTypedReads<decimal>("1.5", KDecimal).Should().Be(0, "decimal");
+        AllocatedByTypedReads<decimal>("\"2.5\"", KDecimal).Should().Be(0, "decimal as a string");
+        AllocatedByTypedReads<DateTime>("\"2024-01-02T03:04:05Z\"", KDateTime).Should().Be(0, "datetime");
+        AllocatedByTypedReads<TimeSpan>("\"01:02:03\"", KTimeSpan).Should().Be(0, "timespan");
+        AllocatedByTypedReads<Guid>("\"00000000-0000-0000-0000-000000000001\"", KGuid).Should().Be(0, "guid");
+    }
+
+    // Relies on tiered compilation being off (see the project file), so that the first call already runs optimized code.
+    private static long AllocatedByTypedReads<T>(string value, KustoColumnType type) where T : struct
+    {
+        byte[] json = Encoding.UTF8.GetBytes(value);
+        KustoColumn column = new("c0", type);
+
+        // The first read runs static constructors, which allocate.
+        Read().Should().NotBeNull();
+        long before = GC.GetAllocatedBytesForCurrentThread();
+        for (int i = 0; i < 100; i++)
+        {
+            Read();
+        }
+
+        return GC.GetAllocatedBytesForCurrentThread() - before;
+
+        T? Read()
+        {
+            Utf8JsonReader reader = new(json);
+            reader.Read();
+            return KustoRowValues.ReadValue<T>(ref reader, column, null);
+        }
     }
 
     [TestMethod]

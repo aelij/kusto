@@ -29,17 +29,24 @@ public class KustoRowGetValueTests
     {
         TrackingArrayPool pool = new();
         int rows = 0;
+        object sentinel = new();
         await foreach (KustoTable table in new KustoTableReader(stream, pool, bufferSize).ReadTablesAsync())
         {
+            // One destination for the whole table, with an extra element that ToValues must leave alone.
+            object?[] destination = new object?[table.Columns.Count + 1];
+            destination[^1] = sentinel;
             await foreach (KustoRow row in table.GetRowsAsync())
             {
                 object?[] expected = row.ToValues();
+                row.ToValues(destination);
+                destination[..^1].Select(Comparable).Should().Equal(expected.Select(Comparable), $"{context} row {rows} into a span");
+                destination[^1].Should().BeSameAs(sentinel, $"{context} row {rows} into a span");
 
                 // Rows alternate between reading the columns backwards, which indexes the row at once, and forwards, which extends the index for each column.
                 for (int n = 0; n < expected.Length; n++)
                 {
                     int column = rows % 2 == 0 ? expected.Length - 1 - n : n;
-                    object? value = expected[column] is JsonElement element ? element.GetRawText() : expected[column];
+                    object? value = Comparable(expected[column]);
                     Get(row, column, byName: false).Should().Be(value, $"{context} row {rows}, column {column}");
                     Get(row, column, byName: true).Should().Be(value, $"{context} row {rows}, column {column} by name");
                 }
@@ -51,6 +58,8 @@ public class KustoRowGetValueTests
         pool.AssertAllReturned(context);
         rows.Should().Be(6, context);
     }
+
+    private static object? Comparable(object? value) => value is JsonElement element ? element.GetRawText() : value;
 
     [TestMethod]
     [DynamicData(nameof(BufferSizesAndCompletions))]
@@ -87,6 +96,7 @@ public class KustoRowGetValueTests
         ((Action)(() => rows.Current.GetValue<object>(1))).Should().ThrowExactly<JsonException>();
         ((Action)(() => rows.Current.GetValue<object>("c"))).Should().ThrowExactly<JsonException>();
         ((Action)(() => rows.Current.ToValues())).Should().ThrowExactly<JsonException>().WithMessage("Row has 1 values but the table has 3 columns.");
+        ((Action)(() => rows.Current.ToValues(new object?[3]))).Should().ThrowExactly<JsonException>().WithMessage("Row has 1 values but the table has 3 columns.");
         rows.Current.GetValue<long>("a").Should().Be(1);
         KustoTableReaderLifecycleTests.Text(rows.Current).Should().Be("[1]");
 
@@ -98,10 +108,14 @@ public class KustoRowGetValueTests
         rows.Current.GetValue<long>(0).Should().Be(1);
         rows.Current.GetValue<object>(1).Should().Be(2L);
         ((Action)(() => rows.Current.ToValues())).Should().ThrowExactly<JsonException>();
+        ((Action)(() => rows.Current.ToValues(new object?[4]))).Should().ThrowExactly<JsonException>();
 
         (await rows.MoveNextAsync()).Should().BeTrue();
         rows.Current.GetValue<long>(1).Should().Be(6);
         rows.Current.ToValues().Should().Equal(5L, 6L, 7L);
+        object?[] destination = new object?[3];
+        rows.Current.ToValues(destination);
+        destination.Should().Equal(5L, 6L, 7L);
 
         (await rows.MoveNextAsync()).Should().BeFalse();
         (await tables.MoveNextAsync()).Should().BeFalse();
@@ -134,6 +148,28 @@ public class KustoRowGetValueTests
     }
 
     [TestMethod]
+    public async Task ToValues_DestinationShorterThanTheColumns_ThrowsArgumentException_AndLeavesTheReaderUsable()
+    {
+        TrackingArrayPool pool = new();
+        byte[] payload = Harness.Utf8(Payloads.Response(Payloads.Table(1, "[[1,2,3]]", LongColumns)));
+        await using IAsyncEnumerator<KustoTable> tables = new KustoTableReader(ChunkedStream.Whole(payload), pool, 16).ReadTablesAsync().GetAsyncEnumerator();
+        (await tables.MoveNextAsync()).Should().BeTrue();
+        await using IAsyncEnumerator<KustoRow> rows = tables.Current.GetRowsAsync().GetAsyncEnumerator();
+        (await rows.MoveNextAsync()).Should().BeTrue();
+        object?[] destination = ["x", "y"];
+
+        ((Action)(() => rows.Current.ToValues(destination))).Should().ThrowExactly<ArgumentException>()
+            .WithParameterName("destination").WithMessage("Destination has 2 elements but the table has 3 columns.*");
+        ((Action)(() => rows.Current.ToValues(Span<object?>.Empty))).Should().ThrowExactly<ArgumentException>().WithParameterName("destination");
+        destination.Should().Equal("x", "y");
+        rows.Current.ToValues().Should().Equal(1L, 2L, 3L);
+
+        (await rows.MoveNextAsync()).Should().BeFalse();
+        (await tables.MoveNextAsync()).Should().BeFalse();
+        pool.AssertAllReturned();
+    }
+
+    [TestMethod]
     public async Task ExpiredRow_IsReportedBeforeAColumnThatDoesNotExist()
     {
         TrackingArrayPool pool = new();
@@ -154,6 +190,7 @@ public class KustoRowGetValueTests
             ((Action)(() => row.GetValue<long>("nope"))).Should().ThrowExactly<ObjectDisposedException>();
             ((Action)(() => row.GetValue<object>("nope"))).Should().ThrowExactly<ObjectDisposedException>();
             ((Action)(() => row.GetValue<long>((string)null!))).Should().ThrowExactly<ObjectDisposedException>();
+            ((Action)(() => row.ToValues(Span<object?>.Empty))).Should().ThrowExactly<ObjectDisposedException>();
         }
 
         ((Action)(() => rows.Current.GetValue<long>((string)null!))).Should().ThrowExactly<ArgumentNullException>();

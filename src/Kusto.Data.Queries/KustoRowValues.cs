@@ -9,13 +9,24 @@ internal static class KustoRowValues
 {
     public static object?[] ToValues(ReadOnlySpan<byte> row, ReadOnlySpan<KustoColumn> columns)
     {
+        var values = new object?[columns.Length];
+        ToValues(row, columns, values);
+        return values;
+    }
+
+    public static void ToValues(ReadOnlySpan<byte> row, ReadOnlySpan<KustoColumn> columns, Span<object?> destination)
+    {
+        if (destination.Length < columns.Length)
+        {
+            throw new ArgumentException($"Destination has {destination.Length} elements but the table has {columns.Length} columns.", nameof(destination));
+        }
+
         var reader = new Utf8JsonReader(row);
         if (!reader.Read() || reader.TokenType != JsonTokenType.StartArray)
         {
             throw new JsonException("Row is not a JSON array.");
         }
 
-        var values = new object?[columns.Length];
         for (var i = 0; i < columns.Length; i++)
         {
             if (!reader.Read() || reader.TokenType == JsonTokenType.EndArray)
@@ -25,7 +36,7 @@ internal static class KustoRowValues
 
             try
             {
-                values[i] = ReadValue(ref reader, columns[i]);
+                destination[i] = ReadValue(ref reader, columns[i]);
             }
             catch (InvalidOperationException e)
             {
@@ -37,8 +48,6 @@ internal static class KustoRowValues
         {
             throw new JsonException($"Row has more values than the table's {columns.Length} columns.");
         }
-
-        return values;
     }
 
     public static JsonException TooFewValues(int count, int columns) => new($"Row has {count} values but the table has {columns} columns.");

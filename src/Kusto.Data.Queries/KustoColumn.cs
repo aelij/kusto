@@ -10,7 +10,7 @@ public sealed record KustoColumn(
     [property: JsonPropertyName("ColumnName")] string Name,
     [property: JsonPropertyName("ColumnType")] KustoColumnType Type);
 
-/// <summary>The Kusto scalar data types, and the .NET types that <see cref="KustoRow.ToValues"/> converts them to.</summary>
+/// <summary>The Kusto scalar data types, and the .NET types that <see cref="KustoRow.ToValues()"/> converts them to.</summary>
 [JsonConverter(typeof(JsonStringEnumConverter<KustoColumnType>))]
 [SuppressMessage("Naming", "CA1720:Identifier contains type name", Justification = "The members are named after the Kusto types, which is also how they are matched when deserialized.")]
 public enum KustoColumnType

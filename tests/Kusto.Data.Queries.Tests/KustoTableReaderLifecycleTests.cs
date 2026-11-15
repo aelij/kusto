@@ -57,6 +57,7 @@ public class KustoTableReaderLifecycleTests
         ((Action)(() => row.UseData(static (_, _) => 0, 0))).Should().ThrowExactly<ObjectDisposedException>();
         ((Action)(() => row.UseData(static (_, _) => { }, 0))).Should().ThrowExactly<ObjectDisposedException>();
         ((Action)(() => row.ToValues())).Should().ThrowExactly<ObjectDisposedException>();
+        ((Action)(() => row.ToValues(new object?[8]))).Should().ThrowExactly<ObjectDisposedException>();
         ((Action)(() => row.ToDocument())).Should().ThrowExactly<ObjectDisposedException>();
     }
 
@@ -488,7 +489,7 @@ public class KustoTableReaderLifecycleTests
         (await rows.MoveNextAsync()).Should().BeTrue();
         KustoRow row = rows.Current;
 
-        ((Action)(() => row.UseData<int>(null!, 0))).Should().ThrowExactly<ArgumentNullException>();
+        ((Action)(() => row.UseData(null!, 0))).Should().ThrowExactly<ArgumentNullException>();
         ((Action)(() => row.UseData<int, int>(null!, 0))).Should().ThrowExactly<ArgumentNullException>();
         Text(row).Should().Be("[\"a\"]");
     }
@@ -502,7 +503,7 @@ public class KustoTableReaderLifecycleTests
         (await rows.MoveNextAsync()).Should().BeTrue();
         FormatException thrown = new();
 
-        ((Action)(() => rows.Current.UseData<FormatException>(static (_, e) => throw e, thrown))).Should().Throw<FormatException>().Which.Should().BeSameAs(thrown);
+        ((Action)(() => rows.Current.UseData(static (_, e) => throw e, thrown))).Should().Throw<FormatException>().Which.Should().BeSameAs(thrown);
 
         Text(rows.Current).Should().Be("[\"a\"]");
         (await RestAsync(tables, rows)).Should().Equal(TwoTablesEvents[2..]);
@@ -571,7 +572,7 @@ public class KustoTableReaderLifecycleTests
         rows.Current.GetValue<JsonElement>(0)!.Value.GetProperty("a")[1].GetString().Should().Be("x");
         rows.Current.GetValue<long>("l", 7).Should().Be(-5);
         rows.Current.GetValue<object>(2).Should().Be(-5L);
-        rows.Current.GetValue<string>(1, "d").Should().Be("é☃");
+        rows.Current.GetValue(1, "d").Should().Be("é☃");
         ((Action)(() => rows.Current.GetValue<int>(2))).Should().ThrowExactly<InvalidCastException>();
         ((Action)(() => rows.Current.GetValue<string>(2))).Should().ThrowExactly<InvalidCastException>();
         ((Action)(() => rows.Current.GetValue<long>(3))).Should().ThrowExactly<ArgumentOutOfRangeException>();
@@ -586,7 +587,7 @@ public class KustoTableReaderLifecycleTests
         rows.Current.GetValue<long>("l", 7).Should().Be(7);
         rows.Current.GetValue<JsonElement>(0).Should().BeNull();
         rows.Current.GetValue<string>(1).Should().BeNull();
-        rows.Current.GetValue<string>("s", "d").Should().Be("d");
+        rows.Current.GetValue("s", "d").Should().Be("d");
         rows.Current.GetValue<object>(2).Should().BeNull();
 
         (await rows.MoveNextAsync()).Should().BeFalse();
