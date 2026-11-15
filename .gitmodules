@@ -1,0 +1,4 @@
+[submodule "external/coyote"]
+	path = external/coyote
+	url = https://github.com/aelij/coyote.git
+	branch = fix-rewriting-extern-methods

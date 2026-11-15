@@ -18,3 +18,10 @@ See README.md for what the library does. This file covers what isn't obvious fro
 - Malformed input must throw `JsonException` and nothing else; assert exact exception types.
 - Don't weaken a test to make it pass.
 - Parallel agents must each pass their own `--artifacts-path`, or their builds collide.
+
+## Coyote tests
+
+- `Kusto.Data.Queries.CoyoteTests` uses [Coyote](https://microsoft.github.io/coyote/) from the `external/coyote`
+  submodule until a release can rewrite the library.
+- Each test lists the `Outcomes` it must reach, so that it cannot pass without exploring the interleavings it is about.
+- Warm up lazily initialized library code in `[ClassInitialize]`, or replaying a failure diverges.

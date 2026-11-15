@@ -84,7 +84,7 @@ public sealed class KustoTable
         public ValueTask DisposeAsync()
         {
             // The guard may reject the call, which must then leave the enumeration as it was.
-            table.Reader.InvalidateRow(table);
+            table.Reader.DisposeRows(table);
             _disposed = true;
             return default;
         }

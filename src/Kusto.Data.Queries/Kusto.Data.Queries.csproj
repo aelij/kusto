@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Kusto.Data.Queries.Tests" />
+    <InternalsVisibleTo Include="Kusto.Data.Queries.CoyoteTests" />
   </ItemGroup>
 
   <ItemGroup>

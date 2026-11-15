@@ -1,0 +1,32 @@
+<Project Sdk="MSTest.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net11.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <!-- TODO: use the Microsoft.Coyote.Test and Microsoft.Coyote.Tool packages once a release can rewrite this library. -->
+    <CoyoteRepository>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)../../external/coyote'))</CoyoteRepository>
+    <CoyoteCommand>dotnet run --project "$(CoyoteRepository)Tools/Coyote/Coyote.csproj" -f $(TargetFramework) -c $(Configuration)</CoyoteCommand>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AwesomeAssertions" />
+    <ProjectReference Include="../../src/Kusto.Data.Queries/Kusto.Data.Queries.csproj" />
+    <ProjectReference Include="$(CoyoteRepository)Source/Test/Test.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../Kusto.Data.Queries.Tests/TestInfrastructure.cs" Link="TestInfrastructure.cs" />
+  </ItemGroup>
+
+  <!--
+    Coyote controls the concurrency of rewritten assemblies only. The library is rewritten with memory locations, so that
+    its unguarded field accesses are scheduling points too; the tests are not, which keeps the explored space small.
+    An assembly that is already rewritten is skipped, and the build copies a fresh one whenever it changes.
+  -->
+  <Target Name="CoyoteRewrite" AfterTargets="Build">
+    <Exec Command="$(CoyoteCommand) -- rewrite &quot;$(TargetDir)Kusto.Data.Queries.dll&quot; --rewrite-memory-locations true" />
+    <Exec Command="$(CoyoteCommand) --no-build -- rewrite &quot;$(TargetPath)&quot;" />
+  </Target>
+
+</Project>

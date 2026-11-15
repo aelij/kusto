@@ -4,6 +4,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Kusto.Data.Queries.Tests/Kusto.Data.Queries.Tests.csproj" />
+    <Project Path="tests/Kusto.Data.Queries.CoyoteTests/Kusto.Data.Queries.CoyoteTests.csproj" />
     <Project Path="tests/Kusto.Data.Queries.Benchmarks/Kusto.Data.Queries.Benchmarks.csproj" />
   </Folder>
 </Solution>

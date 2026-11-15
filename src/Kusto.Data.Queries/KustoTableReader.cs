@@ -141,11 +141,13 @@ public sealed class KustoTableReader
     internal ValueTask<bool> MoveNextRowAsync(KustoTable table, CancellationToken cancellationToken)
         => MoveNextAsync(table, cancellationToken.CanBeCanceled ? cancellationToken : _cancellationToken);
 
-    internal void InvalidateRow(KustoTable table)
+    /// <summary>Ends the rows of <paramref name="table"/>, so that an advance that races the disposal finds no row.</summary>
+    internal void DisposeRows(KustoTable table)
     {
         Enter();
         if (_rowsTable == table)
         {
+            _rowsTable = null;
             InvalidateRow();
         }
 
